@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>אתר לימודי ביולוגיה</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f9ff;
+        }
+        .card-container {
+            perspective: 1000px;
+        }
+        .card {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+        }
+        .card.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-front {
+            background-color: #60a5fa;
+            color: white;
+            border: 4px solid #3b82f6;
+        }
+        .card-back {
+            background-color: #93c5fd;
+            color: black;
+            border: 4px solid #60a5fa;
+            transform: rotateY(180deg);
+        }
+        .correct-answer {
+            background-color: #a7f3d0;
+            border: 4px solid #34d399;
+        }
+        .incorrect-answer {
+            background-color: #fecaca;
+            border: 4px solid #f87171;
+        }
+        .quiz-option:hover {
+            transform: scale(1.02);
+        }
+        .memory-card {
+            cursor: pointer;
+            transition: transform 0.6s, background-color 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            transform-style: preserve-3d;
+        }
+        .memory-card.flipped {
+            transform: rotateY(180deg);
+        }
+        .memory-card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.5rem;
+            text-align: center;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: bold;
+        }
+        .memory-card-back {
+            background-color: #60a5fa;
+            color: white;
+        }
+        .memory-card-front {
+            background-color: #93c5fd;
+            color: black;
+            transform: rotateY(180deg);
+        }
+        .memory-card.matched {
+            background-color: #d1d5db; /* A lighter gray for matched cards */
+            border-color: #6b7280;
+        }
+        .memory-card.matched .memory-card-front,
+        .memory-card.matched .memory-card-back {
+            background-color: #d1d5db;
+        }
+        /* Adjustments for the memory game cards */
+        .memory-card {
+            height: 160px; /* Increased height */
+            width: 100%;
+        }
+        .memory-card-face {
+            font-size: 0.9rem; /* Adjusted font size */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+<div id="app" class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-4xl mx-4">
+    <!-- Main Menu Screen -->
+    <div id="main-menu" class="text-center">
+        <h1 class="text-4xl font-bold text-gray-800 mb-6">אתר לימודי ביולוגיה</h1>
+        <p class="text-xl text-gray-600 mb-8">ברוכים הבאים! בחרו פעילות כדי להתחיל לתרגל:</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <button class="menu-button p-6 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl shadow-lg transition transform hover:scale-105" onclick="showSubjectSelection('flashcards')">
+                <i class="fas fa-cards text-4xl mb-2"></i>
+                <p class="text-lg font-bold">כרטיסיות לימוד</p>
+            </button>
+            <button class="menu-button p-6 bg-green-500 hover:bg-green-600 text-white rounded-2xl shadow-lg transition transform hover:scale-105" onclick="showSubjectSelection('memory')">
+                <i class="fas fa-brain text-4xl mb-2"></i>
+                <p class="text-lg font-bold">משחק זיכרון</p>
+            </button>
+            <button class="menu-button p-6 bg-purple-500 hover:bg-purple-600 text-white rounded-2xl shadow-lg transition transform hover:scale-105" onclick="showSubjectSelection('quiz')">
+                <i class="fas fa-question-circle text-4xl mb-2"></i>
+                <p class="text-lg font-bold">מבחנים רב-ברירתיים</p>
+            </button>
+        </div>
+    </div>
+
+    <!-- Subject Selection Screen -->
+    <div id="subject-selection" class="hidden text-center">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6" id="subject-title"></h2>
+        <p class="text-lg text-gray-600 mb-8">בחר נושא:</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button class="subject-button p-4 bg-yellow-400 hover:bg-yellow-500 rounded-xl shadow-md font-bold transition transform hover:scale-105" onclick="startActivity('אקולוגיה')">אקולוגיה</button>
+            <button class="subject-button p-4 bg-yellow-400 hover:bg-yellow-500 rounded-xl shadow-md font-bold transition transform hover:scale-105" onclick="startActivity('מבואות')">מבואות</button>
+            <button class="subject-button p-4 bg-yellow-400 hover:bg-yellow-500 rounded-xl shadow-md font-bold transition transform hover:scale-105" onclick="startActivity('חקר')">חקר</button>
+            <button class="subject-button p-4 bg-yellow-400 hover:bg-yellow-500 rounded-xl shadow-md font-bold transition transform hover:scale-105" onclick="startActivity('כל הנושאים')">כל הנושאים</button>
+        </div>
+        <button class="mt-8 p-3 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-full font-bold transition transform hover:scale-105" onclick="goBackToMainMenu()">
+            <i class="fas fa-arrow-right"></i> חזור לתפריט הראשי
+        </button>
+    </div>
+
+    <!-- Flashcards Screen -->
+    <div id="flashcards-view" class="hidden">
+        <div class="flex items-center justify-between mb-6">
+            <button class="p-3 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-full font-bold transition transform hover:scale-105" onclick="goBackToSubjectSelection()">
+                <i class="fas fa-arrow-right"></i> חזור
+            </button>
+            <h2 class="text-2xl font-bold text-gray-800" id="flashcards-title"></h2>
+            <button class="p-3 bg-blue-500 hover:bg-blue-600 text-white rounded-full font-bold transition transform hover:scale-105" onclick="nextFlashcard()">הבא</button>
+        </div>
+        <div class="card-container flex justify-center items-center">
+            <div id="flashcard" class="card" onclick="flipCard()">
+                <div class="card-face card-front" id="flashcard-front"></div>
+                <div class="card-face card-back" id="flashcard-back"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Memory Game Screen -->
+    <div id="memory-game-view" class="hidden">
+        <div class="flex items-center justify-between mb-6">
+            <button class="p-3 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-full font-bold transition transform hover:scale-105" onclick="goBackToSubjectSelection()">
+                <i class="fas fa-arrow-right"></i> חזור
+            </button>
+            <h2 class="text-2xl font-bold text-gray-800" id="memory-game-title"></h2>
+            <button class="p-3 bg-green-500 hover:bg-green-600 text-white rounded-full font-bold transition transform hover:scale-105" onclick="initMemoryGame()">התחל משחק חדש</button>
+        </div>
+        <div id="memory-board" class="grid grid-cols-3 md:grid-cols-4 gap-4"></div>
+        <div id="memory-message" class="mt-4 text-center font-bold text-lg"></div>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div id="quiz-view" class="hidden">
+        <div class="flex items-center justify-between mb-6">
+            <button class="p-3 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-full font-bold transition transform hover:scale-105" onclick="goBackToSubjectSelection()">
+                <i class="fas fa-arrow-right"></i> חזור
+            </button>
+            <h2 class="text-2xl font-bold text-gray-800" id="quiz-title"></h2>
+            <button class="p-3 bg-purple-500 hover:bg-purple-600 text-white rounded-full font-bold transition transform hover:scale-105" onclick="startQuiz()">התחל מבחן חדש</button>
+        </div>
+        <div id="quiz-content">
+            <p id="question-text" class="text-lg text-gray-700 mb-4"></p>
+            <div id="options-container" class="grid grid-cols-1 gap-4"></div>
+            <div id="quiz-feedback" class="mt-4 p-4 text-center rounded-xl font-bold hidden"></div>
+            <button id="try-again-button" class="mt-4 p-3 bg-gray-400 hover:bg-gray-500 text-white rounded-full font-bold transition transform hover:scale-105 hidden" onclick="tryAgain()">נסה שוב</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let currentActivity = '';
+    let currentSubject = '';
+    let flashcardsData = [];
+    let currentFlashcardIndex = 0;
+    let memoryGameData = [];
+    let memoryCards = [];
+    let flippedCards = [];
+    let canFlip = true;
+    let matchedPairs = 0;
+    let quizQuestions = [];
+    let currentQuizQuestionIndex = 0;
+    let quizCorrectOptionIndex = null;
+    let chatHistory = [];
+
+    const data = {
+        flashcards: {
+            'אקולוגיה': [
+                { term: 'אקולוגיה', definition: 'הענף בביולוגיה החוקר את היחסי גומלין בין אורגניזמים חיים לבין סביבתם.' },
+                { term: 'גורמים אביוטיים', definition: 'הגורמים הדוממים בסביבה: קרקע, רוח, טמפרטורה, משקעים, זמינות מים, אור, הרכב האוויר, לחות וגובה טופוגרפי.' },
+                { term: 'גורמים ביוטיים', definition: 'הגורמים החיים בבית הגידול: אורגניזמים באותו מין ובמינים שונים.' },
+                { term: 'כושר נשיאה', definition: 'נקבע על ידי השפעתם המשולבת של כל מרכיבי הסביבה.' },
+                { term: 'פוטוסינתזה', definition: 'תהליך שבו צמחים מייצרים חומרים אורגניים ממים ופחמן דו-חמצני בעזרת אנרגיית אור.' },
+                { term: 'יצרנים', definition: 'אורגניזמים אוטוטרופיים (כמו צמחים) המייצרים את מזונם.' },
+                { term: 'צרכנים', definition: 'אורגניזמים הטרוטרופיים המקבלים חומרים אורגניים דרך הזנה.' },
+                { term: 'מגוון המינים', definition: 'מדד לשונות הביולוגית בבית גידול, כולל מספר המינים והשונות הגנטית והמערכתית.' },
+            ],
+            'מבואות': [
+                { term: 'הומאוסטזיס', definition: 'שמירה על סביבה פנימית יציבה בגוף, למרות שינויים בסביבה החיצונית.' },
+                { term: 'נשימה תאית', definition: 'תהליך שבו התא מפרק חומרים אורגניים (כמו גלוקוז) על מנת להפיק אנרגיה זמינה לתא.' },
+                { term: 'תא', definition: 'יחידת המבנה והתפקוד הבסיסית של כל היצורים החיים.' },
+                { term: 'מטבוליזם', definition: 'כל תהליכי הפירוק וההרכבה של חומרים בגוף (חילוף חומרים).' },
+                { term: 'מיטוכונדריה', definition: 'אברון האחראי על הפקת אנרגיה בנשימה תאית.' },
+                { term: 'קרום התא', definition: 'הגבול החיצוני של התא המבקר את מעבר החומרים.' },
+            ],
+            'חקר': [
+                { term: 'משתנה בלתי תלוי', definition: 'גורם משפיע - הגורם שהחוקר משנה או קובע בניסוי.' },
+                { term: 'משתנה תלוי', definition: 'גורם מושפע - אותו אנו מודדים בניסוי.' },
+                { term: 'השערת מחקר', definition: 'השערה אודות הקשר בין המשתנים, שניתן לבדוק בניסוי.' },
+                { term: 'חזרות', definition: 'בדיקות חוזרות לאותו ניסוי על מנת להיות בטוחים במהימנות הניסוי. תוצאה אחת יכולה להיות מקרית והיא יכולה לגרום לנו להסיק מסקנות שגויות. על מנת לומר שמסקנות אלו נכונות תמיד צריך לבדוק את כל הצמחים בעולם בכל יום, דבר שאינו אפשרי כמובן. לכן נבחר באפשרות ביניים והיא נערוך מספר בדיקות חוזרות באופן זה נקטין את הסיכוי לטעויות מקריות.' },
+                { term: 'אישוש השערה', definition: 'אישור מדעי לכך שההשערה ששערנו אכן נכונה.' },
+                { term: 'הפרכת השערה', definition: 'קבלת תוצאות מדעיות לכך שהתוצאות הניסוי אינן תואמות את ההשערה.' },
+                { term: 'בקרה', definition: 'ניסוי ללא טיפול, שבו הגורמים הקבועים זהים לקבוצת הניסוי פרט למשתנה הנבדק.' },
+                { term: 'ניתוח ממצאים', definition: 'בזמן עריכת הניסוי, עלינו לאסוף את הממצאים בניסוי.' }
+            ]
+        },
+        quiz: {
+            'אקולוגיה': [
+                {
+                    question: 'מקור האנרגיה הראשוני של רוב היצורים החיים על פני כדור הארץ הוא:',
+                    options: ['אנרגיה כימית מהמזון', 'אנרגיית חום מהשמש', 'אנרגיית אור מהשמש', 'אנרגיה כימית ב-ATP'],
+                    correct: 2,
+                    feedback: 'נכון! רוב היצורים ניזונים בסופו של דבר מהאנרגיה שמקורה באור השמש, שנקלטת על ידי יצרנים כמו צמחים.',
+                    hint: 'חשבו על יצרנים כמו צמחים וכיצד הם מקבלים אנרגיה.'
+                },
+                {
+                    question: 'ההבדל העיקרי בין התאמה להסתגלות הוא ש...',
+                    options: ['הסתגלות היא תכונה תורשתית וההתאמה אינה.', 'התאמה היא תכונה תורשתית וההסתגלות אינה.', 'התאמה מופיעה אצל בעלי חיים והסתגלות אצל צמחים.', 'התאמה מופיעה אצל צמחים והסתגלות אצל בעלי חיים.'],
+                    correct: 1,
+                    feedback: 'מעולה! התאמה היא תכונה תורשתית המאפשרת ליצור לשרוד בסביבתו, בעוד שהסתגלות היא שינוי זמני ולא תורשתי.',
+                    hint: 'אחד מהמושגים הוא תכונה מולדת והשני נרכשת במהלך החיים.'
+                },
+                {
+                    question: 'איזו מהקבוצות הבאות כוללת תנאים אביוטיים בלבד?',
+                    options: ['קרקע חולי, רוחות חזקות, בעלי חיים המסתתרים במחילות.', 'רכס כורכר, רסס מי ים, צמחי חבצלת החוף.', 'דיונות חול דק, עוצמת קרינה חזקה וטמפרטורות נמוכות בלילה.', 'אדמה סלעית, הפרשי טמפרטורה גדולים, צמחיה מתרכזת בואדיות.'],
+                    correct: 2,
+                    feedback: 'נכון! גורמים אביוטיים הם גורמים דוממים כמו קרקע, רוח, קרינה וטמפרטורה.',
+                    hint: 'זכרו שגורמים אביוטיים הם דוממים. חפשו את התשובה שאינה כוללת יצורים חיים.'
+                }
+            ],
+            'מבואות': [
+                {
+                    question: 'מהי מטרת תהליך ההומאוסטזיס?',
+                    options: ['לשמור על סביבה פנימית משתנה.', 'להקטין את נפח התא.', 'לשמור על סביבה פנימית יציבה.', 'לווסת את כניסת החמצן בלבד.'],
+                    correct: 2,
+                    feedback: 'נכון! הומאוסטזיס הוא תהליך של שמירה על תנאים פנימיים קבועים ויציבים בגוף, למרות שינויים בסביבה החיצונית.',
+                    hint: 'מהי המטרה של מנגנוני ויסות בגוף?'
+                },
+                {
+                    question: 'איזה אברון אחראי על הפקת אנרגיה בתהליך הנשימה התאית?',
+                    options: ['גרעין התא.', 'מיטוכונדריה.', 'ציטופלסמה.', 'קרום התא.'],
+                    correct: 1,
+                    feedback: 'כל הכבוד! המיטוכונדריה מכונה "מפעל האנרגיה" של התא, והיא אחראית על הפקת ATP.',
+                    hint: 'נסי להיזכר באברון שצורתו מזכירה נקניקיה או שעועית.'
+                },
+                {
+                    question: 'מהו תפקידו העיקרי של קרום התא?',
+                    options: ['לייצר חלבונים.', 'להגן על התא.', 'לווסת את מעבר החומרים פנימה והחוצה.', 'לאחסן את החומר התורשתי.'],
+                    correct: 2,
+                    feedback: 'נכון! קרום התא הוא בררן, והוא מאפשר מעבר של חומרים מסוימים בלבד.',
+                    hint: 'חשוב על הגבול בין התא לסביבה החיצונית ועל תפקידו.'
+                },
+                {
+                    question: 'מהי נשימה תאית?',
+                    options: ['תהליך שבו התא מייצר חמצן.', 'תהליך שבו התא קולט חומרים אורגניים.', 'תהליך שבו התא מפרק חומרים אורגניים להפקת אנרגיה.', 'תהליך של התרבות התא.'],
+                    correct: 2,
+                    feedback: 'נכון! נשימה תאית היא תהליך מורכב המתרחש בתאים, שבו מפורקים חומרים אורגניים (כמו גלוקוז) על מנת להפיק אנרגיה זמינה לתא.',
+                    hint: 'היזכרו ב"מטבע האנרגיה" של התא, ATP.'
+                },
+            ],
+            'חקר': [
+                {
+                    question: 'איזה מושג מתאר את הגורם המשפיע בניסוי?',
+                    options: ['משתנה תלוי.', 'בקרה.', 'משתנה בלתי תלוי.', 'השערה.'],
+                    correct: 2,
+                    feedback: 'נכון! המשתנה הבלתי תלוי הוא הגורם שהחוקר משנה או קובע בניסוי, במטרה לבדוק את השפעתו על המשתנה התלוי.',
+                    hint: 'ההפך מ"תלוי" הוא "בלתי תלוי".'
+                },
+                {
+                    question: 'מדוע חשוב לבצע חזרות בניסוי?',
+                    options: ['כדי שהניסוי ייראה ארוך יותר.', 'כדי להגדיל את הסיכוי לטעויות.', 'כדי לוודא את מהימנות התוצאות ולהקטין טעויות מקריות.', 'כדי לבלבל את המשתתפים בניסוי.'],
+                    correct: 2,
+                    feedback: 'מעולה! חזרות הן חיוניות כדי להבטיח שהתוצאות לא היו מקריות, ובכך להעלות את רמת הביטחון במסקנות.',
+                    hint: 'תוצאה מקרית יכולה להתרחש בפעם אחת, אך האם היא תחזור על עצמה?'
+                },
+                {
+                    question: 'מהו תפקידה של הבקרה בניסוי?',
+                    options: ['להיות קבוצת ניסוי נוספת.', 'לשמש כנקודת ייחוס להשוואה.', 'לוודא שהניסוי מתאים להשערה.', 'לשמש כבסיס לניתוח הממצאים.'],
+                    correct: 1,
+                    feedback: 'נכון! הבקרה היא קבוצת השוואה שבה לא מתבצע הטיפול, כך שניתן לראות אם המשתנה הבלתי תלוי הוא באמת הגורם לשינוי.',
+                    hint: 'האם ניסוי יכול להיות תקף ללא השוואה?'
+                },
+                {
+                    question: 'מהי השערה מדעית?',
+                    options: ['היא שאלה שאין לה תשובה.', 'היא ניחוש פרוע של החוקר.', 'היא קביעה על הקשר בין המשתנים, שניתן לבדוק באמצעות ניסוי.', 'היא מסקנה של ניסוי.'],
+                    correct: 2,
+                    feedback: 'נכון! השערה היא הצהרה מדעית הניתנת לבדיקה, המציגה קשר אפשרי בין המשתנים המתוכננים להיבדק בניסוי.',
+                    hint: 'השערה היא הצהרה שניתן לבדוק בניסוי, לא שאלה.'
+                },
+            ]
+        }
+    };
+
+    // Helper functions for shuffling arrays
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    // Screen navigation logic
+    function hideAllViews() {
+        document.getElementById('main-menu').classList.add('hidden');
+        document.getElementById('subject-selection').classList.add('hidden');
+        document.getElementById('flashcards-view').classList.add('hidden');
+        document.getElementById('memory-game-view').classList.add('hidden');
+        document.getElementById('quiz-view').classList.add('hidden');
+    }
+
+    function showSubjectSelection(activity) {
+        currentActivity = activity;
+        hideAllViews();
+        document.getElementById('subject-title').innerText = `בחירת נושא עבור ${activity === 'flashcards' ? 'כרטיסיות לימוד' : activity === 'memory' ? 'משחק זיכרון' : 'מבחנים'}`;
+        document.getElementById('subject-selection').classList.remove('hidden');
+    }
+
+    function goBackToMainMenu() {
+        hideAllViews();
+        document.getElementById('main-menu').classList.remove('hidden');
+    }
+
+    function goBackToSubjectSelection() {
+        hideAllViews();
+        document.getElementById('subject-selection').classList.remove('hidden');
+    }
+
+    function startActivity(subject) {
+        currentSubject = subject;
+        hideAllViews();
+        if (currentActivity === 'flashcards') {
+            initFlashcards();
+        } else if (currentActivity === 'memory') {
+            initMemoryGame();
+        } else if (currentActivity === 'quiz') {
+            startQuiz();
+        }
+    }
+
+    // Flashcard logic
+    function initFlashcards() {
+        document.getElementById('flashcards-view').classList.remove('hidden');
+        document.getElementById('flashcards-title').innerText = `כרטיסיות לימוד - ${currentSubject}`;
+        let allFlashcards = [];
+        if (currentSubject === 'כל הנושאים') {
+            for (const key in data.flashcards) {
+                allFlashcards = allFlashcards.concat(data.flashcards[key]);
+            }
+        } else {
+            allFlashcards = data.flashcards[currentSubject];
+        }
+        shuffleArray(allFlashcards);
+        flashcardsData = allFlashcards;
+        currentFlashcardIndex = 0;
+        renderFlashcard();
+    }
+
+    function renderFlashcard() {
+        if (flashcardsData.length === 0) {
+            document.getElementById('flashcard-front').innerText = 'אין נתונים עבור נושא זה.';
+            document.getElementById('flashcard-back').innerText = '';
+            document.getElementById('flashcard').classList.remove('flipped');
+            return;
+        }
+        const card = flashcardsData[currentFlashcardIndex];
+        document.getElementById('flashcard-front').innerText = card.term;
+        document.getElementById('flashcard-back').innerText = card.definition;
+        document.getElementById('flashcard').classList.remove('flipped');
+    }
+
+    function flipCard() {
+        document.getElementById('flashcard').classList.toggle('flipped');
+    }
+
+    function nextFlashcard() {
+        currentFlashcardIndex = (currentFlashcardIndex + 1) % flashcardsData.length;
+        renderFlashcard();
+    }
+
+    // Memory Game logic
+    function initMemoryGame() {
+        document.getElementById('memory-game-view').classList.remove('hidden');
+        document.getElementById('memory-game-title').innerText = `משחק זיכרון - ${currentSubject}`;
+        document.getElementById('memory-message').innerText = '';
+        document.getElementById('memory-board').innerHTML = '';
+        flippedCards = [];
+        matchedPairs = 0;
+        canFlip = true;
+
+        let allPairs = [];
+        if (currentSubject === 'כל הנושאים') {
+            for (const key in data.flashcards) {
+                allPairs = allPairs.concat(data.flashcards[key]);
+            }
+        } else {
+            allPairs = data.flashcards[currentSubject];
+        }
+
+        const numberOfPairs = 6;
+        const selectedPairs = [];
+        shuffleArray(allPairs);
+        for (let i = 0; i < numberOfPairs && i < allPairs.length; i++) {
+            selectedPairs.push(allPairs[i]);
+        }
+
+        memoryGameData = [];
+        selectedPairs.forEach(pair => {
+            memoryGameData.push({ type: 'term', content: pair.term, match: pair.definition });
+            memoryGameData.push({ type: 'definition', content: pair.definition, match: pair.term });
+        });
+
+        shuffleArray(memoryGameData);
+
+        const board = document.getElementById('memory-board');
+        memoryCards = [];
+        memoryGameData.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.classList.add('memory-card');
+            card.dataset.index = index;
+            card.innerHTML = `<div class="memory-card-face memory-card-back">
+                                <i class="fas fa-question text-4xl text-gray-800"></i>
+                            </div>
+                            <div class="memory-card-face memory-card-front">
+                                <span>${item.content}</span>
+                            </div>`;
+            card.onclick = () => flipMemoryCard(card);
+            board.appendChild(card);
+            memoryCards.push(card);
+        });
+    }
+
+    function flipMemoryCard(card) {
+        if (!canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) {
+            return;
+        }
+
+        card.classList.add('flipped');
+        flippedCards.push(card);
+
+        if (flippedCards.length === 2) {
+            canFlip = false;
+            const card1 = flippedCards[0];
+            const card2 = flippedCards[1];
+            const card1Data = memoryGameData[card1.dataset.index];
+            const card2Data = memoryGameData[card2.dataset.index];
+
+            if (card1Data.match === card2Data.content) {
+                // Match
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                card1.style.pointerEvents = 'none';
+                card2.style.pointerEvents = 'none';
+                matchedPairs++;
+                if (matchedPairs === memoryCards.length / 2) {
+                    document.getElementById('memory-message').innerText = 'כל הכבוד! הצלחת!';
+                }
+                resetMemoryTurn();
+            } else {
+                // No match, flip them back after a delay
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    resetMemoryTurn();
+                }, 1000);
+            }
+        }
+    }
+
+    function resetMemoryTurn() {
+        flippedCards = [];
+        canFlip = true;
+    }
+
+    // Quiz logic
+    function startQuiz() {
+        document.getElementById('quiz-view').classList.remove('hidden');
+        document.getElementById('quiz-title').innerText = `מבחנים רב-ברירתיים - ${currentSubject}`;
+        let allQuestions = [];
+        if (currentSubject === 'כל הנושאים') {
+            for (const key in data.quiz) {
+                allQuestions = allQuestions.concat(data.quiz[key]);
+            }
+        } else {
+            allQuestions = data.quiz[currentSubject];
+        }
+        shuffleArray(allQuestions);
+        quizQuestions = allQuestions;
+        currentQuizQuestionIndex = 0;
+        renderQuizQuestion();
+    }
+
+    function renderQuizQuestion() {
+        if (quizQuestions.length === 0) {
+            document.getElementById('quiz-content').innerHTML = '<p class="text-xl text-center">אין שאלות עבור נושא זה.</p>';
+            return;
+        }
+        const questionData = quizQuestions[currentQuizQuestionIndex];
+        document.getElementById('question-text').innerText = questionData.question;
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+        document.getElementById('quiz-feedback').classList.add('hidden');
+        document.getElementById('try-again-button').classList.add('hidden');
+        quizCorrectOptionIndex = questionData.correct;
+
+        questionData.options.forEach((option, index) => {
+            const button = document.createElement('button');
+            button.innerText = option;
+            button.classList.add('quiz-option', 'p-4', 'bg-gray-200', 'hover:bg-gray-300', 'rounded-xl', 'text-right', 'font-bold', 'transition', 'duration-200');
+            button.onclick = () => checkQuizAnswer(index);
+            optionsContainer.appendChild(button);
+        });
+    }
+
+    function checkQuizAnswer(selectedIndex) {
+        const questionData = quizQuestions[currentQuizQuestionIndex];
+        const feedbackDiv = document.getElementById('quiz-feedback');
+        const optionsButtons = document.querySelectorAll('.quiz-option');
+        optionsButtons.forEach(button => button.style.pointerEvents = 'none');
+
+        if (selectedIndex === questionData.correct) {
+            feedbackDiv.innerText = `נכון! ${questionData.feedback}`;
+            feedbackDiv.classList.remove('hidden', 'incorrect-answer');
+            feedbackDiv.classList.add('correct-answer');
+            optionsButtons[selectedIndex].classList.add('bg-green-400');
+            setTimeout(() => {
+                currentQuizQuestionIndex = (currentQuizQuestionIndex + 1) % quizQuestions.length;
+                renderQuizQuestion();
+            }, 2000);
+        } else {
+            feedbackDiv.innerText = `טעות. נסה שוב. רמז: ${questionData.hint}`;
+            feedbackDiv.classList.remove('hidden', 'correct-answer');
+            feedbackDiv.classList.add('incorrect-answer');
+            optionsButtons[selectedIndex].classList.add('bg-red-400');
+            document.getElementById('try-again-button').classList.remove('hidden');
+        }
+    }
+
+    function tryAgain() {
+        document.getElementById('quiz-feedback').classList.add('hidden');
+        document.getElementById('try-again-button').classList.add('hidden');
+        const optionsButtons = document.querySelectorAll('.quiz-option');
+        optionsButtons.forEach(button => {
+            button.style.pointerEvents = 'auto';
+            button.classList.remove('bg-red-400', 'bg-green-400');
+        });
+    }
+</script>
+
+</body>
+</html>
